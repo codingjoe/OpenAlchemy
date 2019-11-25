@@ -4,6 +4,7 @@
 import pytest
 
 from open_alchemy import exceptions
+from open_alchemy import types
 from open_alchemy.column_factory import object_ref
 
 
@@ -704,3 +705,18 @@ def test_check_foreign_key_required(model_schema, schemas, expected_required):
     )
 
     assert required == expected_required
+
+
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_calculate_schema():
+    """
+    GIVEN object artifacts
+    WHEN _calculate_schema is called with the artifacts
+    THEN the schema for the object reference is returned.
+    """
+    artifacts = types.ObjectArtifacts(ref_model_name="RefSchema")
+
+    schema = object_ref._calculate_schema(artifacts=artifacts)
+
+    assert schema == {"type": "object", "x-de-$ref": "RefSchema"}

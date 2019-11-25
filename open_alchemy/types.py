@@ -67,3 +67,16 @@ class ColumnArtifacts:
     index: typing.Optional[bool] = None
     unique: typing.Optional[bool] = None
     foreign_key: typing.Optional[str] = None
+
+
+ObjectSchema = TypedDict(  # pylint: disable=invalid-name
+    "ObjectSchema", {"type": str, "x-de-$ref": str}
+)
+
+
+@dataclasses.dataclass
+class ObjectArtifacts:
+    """Information required to construct an object reference."""
+
+    # The name of the model referenced
+    ref_model_name: str

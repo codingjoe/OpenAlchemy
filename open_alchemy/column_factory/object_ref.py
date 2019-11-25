@@ -360,3 +360,17 @@ def check_foreign_key_required(
         )
 
     return False
+
+
+def _calculate_schema(*, artifacts: types.ObjectArtifacts) -> types.ObjectSchema:
+    """
+    Calculate the object schema from the artifacts.
+
+    Args:
+        artifacts: The artifactsfor the object reference.
+
+    Returns:
+        The schema for the object to store with the model.
+
+    """
+    return {"type": "object", "x-de-$ref": artifacts.ref_model_name}
