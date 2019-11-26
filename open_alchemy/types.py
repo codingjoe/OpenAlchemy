@@ -80,3 +80,9 @@ class ObjectArtifacts:
 
     # The name of the model referenced
     ref_model_name: str
+    # The artifacts for the foreign key column
+    fk_column_artifacts: typing.Optional[ColumnArtifacts] = None
+    # The back reference for the relationship
+    backref: typing.Optional[str] = None
+    # Whether to use a list for the back reference
+    uselist: typing.Optional[bool] = None

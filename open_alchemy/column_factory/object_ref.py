@@ -4,6 +4,7 @@ import dataclasses
 import typing
 
 import sqlalchemy
+from sqlalchemy import orm
 
 from open_alchemy import exceptions
 from open_alchemy import helpers
@@ -360,6 +361,25 @@ def check_foreign_key_required(
         )
 
     return False
+
+
+def _construct_relationship(
+    *, artifacts: types.ObjectArtifacts
+) -> orm.RelationshipProperty:
+    """
+    Construct the relationship for the object reference.
+
+    Args:
+        artifacts: The artifacts for the object reference.
+
+    Returns:
+        The relationship for the object reference.
+
+    """
+    backref = None
+    if artifacts.backref is not None:
+        backref = orm.backref(artifacts.backref, uselist=artifacts.uselist)
+    return orm.relationship(artifacts.ref_model_name, backref=backref)
 
 
 def _calculate_schema(*, artifacts: types.ObjectArtifacts) -> types.ObjectSchema:

@@ -707,6 +707,52 @@ def test_check_foreign_key_required(model_schema, schemas, expected_required):
     assert required == expected_required
 
 
+@pytest.mark.parametrize(
+    "artifacts, expected_backref, expected_uselist",
+    [
+        (types.ObjectArtifacts("RefSchema"), None, None),
+        (types.ObjectArtifacts("RefSchema", backref="schema"), "schema", None),
+        (types.ObjectArtifacts("RefSchema", uselist=True), None, None),
+        (
+            types.ObjectArtifacts("RefSchema", backref="schema", uselist=False),
+            "schema",
+            False,
+        ),
+        (
+            types.ObjectArtifacts("RefSchema", backref="schema", uselist=True),
+            "schema",
+            True,
+        ),
+    ],
+    ids=[
+        "plain",
+        "backref",
+        "uselist",
+        "backref and uselist false",
+        "backref and uselist true",
+    ],
+)
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_construct_relationship(artifacts, expected_backref, expected_uselist):
+    """
+    GIVEN artifacts and expected backref and uselist
+    WHEN _construct_relationship is called with the artifacts
+    THEN a relationship referring to the referenced model and with the expected backref
+        and uselist is constructed.
+    """
+    relationship = object_ref._construct_relationship(artifacts=artifacts)
+
+    print(relationship.backref)
+    assert relationship.argument == "RefSchema"
+    if expected_backref is None:
+        assert relationship.backref is None
+    else:
+        backref, kwargs = relationship.backref
+        assert backref == expected_backref
+        assert kwargs["uselist"] == expected_uselist
+
+
 @pytest.mark.column
 @pytest.mark.object_ref
 def test_calculate_schema():
