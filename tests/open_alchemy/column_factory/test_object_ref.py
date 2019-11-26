@@ -1,6 +1,8 @@
 """Tests for the column factory."""
 # pylint: disable=protected-access
 
+from unittest import mock
+
 import pytest
 
 from open_alchemy import exceptions
@@ -622,17 +624,17 @@ def test_gather_object_artifacts_fk_column(spec, schemas, expected_fk_column):
     ids=["no type", "wrong type", "no x-foreign-key", "wrong x-foreign-key"],
 )
 @pytest.mark.column
-def test_check_foreign_key_required_invalid_schema(model_schema):
+def test_check_foreign_key_required_spec_invalid_schema(model_schema):
     """
     GIVEN model schema that is not valid
-    WHEN check_foreign_key_required is called
+    WHEN check_foreign_key_required_spec is called
     THEN MalformedRelationshipError is raised.
     """
     fk_spec = {"type": "fk_type", "x-foreign-key": "ref_table.fk_column"}
     fk_logical_name = "ref_table_fk_column"
 
     with pytest.raises(exceptions.MalformedRelationshipError):
-        object_ref.check_foreign_key_required(
+        object_ref.check_foreign_key_required_spec(
             fk_spec=fk_spec,
             fk_logical_name=fk_logical_name,
             model_schema=model_schema,
@@ -687,22 +689,46 @@ def test_check_foreign_key_required_invalid_schema(model_schema):
     ],
 )
 @pytest.mark.column
-def test_check_foreign_key_required(model_schema, schemas, expected_required):
+def test_check_foreign_key_required_spec(model_schema, schemas, expected_required):
     """
     GIVEN foreign key spec, foreign key logical name, model schema, schemas and
         expected required
-    WHEN check_foreign_key_required is called
+    WHEN check_foreign_key_required_spec is called
     THEN the expected required is returned.
     """
     fk_spec = {"type": "fk_type", "x-foreign-key": "ref_table.fk_column"}
     fk_logical_name = "ref_table_fk_column"
 
-    required = object_ref.check_foreign_key_required(
+    required = object_ref.check_foreign_key_required_spec(
         fk_spec=fk_spec,
         fk_logical_name=fk_logical_name,
         model_schema=model_schema,
         schemas=schemas,
     )
+
+    assert required == expected_required
+
+
+@pytest.mark.parametrize(
+    "artifacts, expected_required",
+    [
+        (types.ObjectArtifacts("RefSchema"), False),
+        (
+            types.ObjectArtifacts("RefSchema", fk_column_artifacts=mock.MagicMock()),
+            True,
+        ),
+    ],
+    ids=["none", "not none"],
+)
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_check_foreign_key_required(artifacts, expected_required):
+    """
+    GIVEN artifacts and expected required
+    WHEN _check_foreign_key_required is called with the artifacts
+    THEN the expected required is returned.
+    """
+    required = object_ref._check_foreign_key_required(artifacts=artifacts)
 
     assert required == expected_required
 
@@ -743,7 +769,6 @@ def test_construct_relationship(artifacts, expected_backref, expected_uselist):
     """
     relationship = object_ref._construct_relationship(artifacts=artifacts)
 
-    print(relationship.backref)
     assert relationship.argument == "RefSchema"
     if expected_backref is None:
         assert relationship.backref is None

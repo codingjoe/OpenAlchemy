@@ -142,7 +142,7 @@ def _set_foreign_key(
     ref_schema = schemas[ref_model_name]
     # Any top level $ref must already be resolved
     ref_schema = helpers.merge_all_of(schema=ref_schema, schemas=schemas)
-    fk_required = object_ref.check_foreign_key_required(
+    fk_required = object_ref.check_foreign_key_required_spec(
         fk_spec=fk_spec,
         fk_logical_name=fk_logical_name,
         model_schema=ref_schema,

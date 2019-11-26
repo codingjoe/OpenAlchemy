@@ -58,7 +58,7 @@ def handle_object(
         spec=obj_artifacts.spec, schemas=schemas, fk_column=obj_artifacts.fk_column
     )
     fk_logical_name = f"{logical_name}_{obj_artifacts.fk_column}"
-    fk_required = check_foreign_key_required(
+    fk_required = check_foreign_key_required_spec(
         fk_spec=foreign_key_spec,
         fk_logical_name=fk_logical_name,
         model_schema=model_schema,
@@ -290,7 +290,7 @@ def handle_object_reference(
     return {"type": fk_type, "x-foreign-key": f"{tablename}.{fk_logical_name}"}
 
 
-def check_foreign_key_required(
+def check_foreign_key_required_spec(
     *,
     fk_spec: types.Schema,
     fk_logical_name: str,
@@ -361,6 +361,11 @@ def check_foreign_key_required(
         )
 
     return False
+
+
+def _check_foreign_key_required(*, artifacts: types.ObjectArtifacts) -> bool:
+    """Check whether foreign key should be constructed based on artifacts."""
+    return artifacts.fk_column_artifacts is not None
 
 
 def _construct_relationship(
