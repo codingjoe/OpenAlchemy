@@ -4,6 +4,7 @@
 from unittest import mock
 
 import pytest
+import sqlalchemy
 
 from open_alchemy import exceptions
 from open_alchemy import types
@@ -707,6 +708,41 @@ def test_check_foreign_key_required_spec(model_schema, schemas, expected_require
     )
 
     assert required == expected_required
+
+
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_construct_fk_column_none():
+    """
+    GIVEN artifacts where foreign key column artifacts are None
+    WHEN _construct_fk_column is called with the artifacts
+    THEN MissingArgumentError is raised.
+    """
+    artifacts = types.ObjectArtifacts("RefSchema")
+
+    with pytest.raises(exceptions.MissingArgumentError):
+        object_ref._construct_fk_column(artifacts=artifacts)
+
+
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_construct_fk_column():
+    """
+    GIVEN artifacts with foreign key column artifacts
+    WHEN _construct_fk_column is called with the artifacts
+    THEN a foreign key column is returned.
+    """
+    fk_column_artifacts = types.ColumnArtifacts("integer", foreign_key="table.column")
+    artifacts = types.ObjectArtifacts(
+        "RefSchema", fk_column_artifacts=fk_column_artifacts
+    )
+
+    column = object_ref._construct_fk_column(artifacts=artifacts)
+
+    assert isinstance(column.type, sqlalchemy.Integer)
+    assert len(column.foreign_keys) == 1
+    foreign_key = column.foreign_keys.pop()
+    assert str(foreign_key) == "ForeignKey('table.column')"
 
 
 @pytest.mark.parametrize(

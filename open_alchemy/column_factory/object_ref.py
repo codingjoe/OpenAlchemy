@@ -363,6 +363,25 @@ def check_foreign_key_required_spec(
     return False
 
 
+def _construct_fk_column(*, artifacts: types.ObjectArtifacts) -> sqlalchemy.Column:
+    """
+    Construct the foreign key column for the relationship.
+
+    Args:
+        artifacts: Used to construct the foreign key column.
+
+    Returns:
+        The foreign key column.
+
+    """
+    if artifacts.fk_column_artifacts is None:
+        raise exceptions.MissingArgumentError(
+            "The foreign key column artifacts cannot be None."
+        )
+
+    return column.construct_column(artifacts=artifacts.fk_column_artifacts)
+
+
 def _check_foreign_key_required(*, artifacts: types.ObjectArtifacts) -> bool:
     """Check whether foreign key should be constructed based on artifacts."""
     return artifacts.fk_column_artifacts is not None
