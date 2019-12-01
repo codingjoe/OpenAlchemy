@@ -712,6 +712,39 @@ def test_check_foreign_key_required_spec(model_schema, schemas, expected_require
 
 @pytest.mark.column
 @pytest.mark.object_ref
+def test_calculate_fk_logical_name_none():
+    """
+    GIVEN artifacts where foreign key column name is None
+    WHEN _calculate_fk_logical_name is called with the artifacts
+    THEN MissingArgumentError is raised.
+    """
+    artifacts = types.ObjectArtifacts("RefSchema")
+
+    with pytest.raises(exceptions.MissingArgumentError):
+        object_ref._calculate_fk_logical_name(
+            artifacts=artifacts, logical_name="ref_schema"
+        )
+
+
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_calculate_fk_logical_name():
+    """
+    GIVEN artifacts with foreign key column name
+    WHEN _calculate_fk_logical_name is called with the artifacts
+    THEN a foreign key column is returned.
+    """
+    artifacts = types.ObjectArtifacts("RefSchema", fk_column_name="fk_column")
+
+    name = object_ref._calculate_fk_logical_name(
+        artifacts=artifacts, logical_name="ref_schema"
+    )
+
+    assert name == "ref_schema_fk_column"
+
+
+@pytest.mark.column
+@pytest.mark.object_ref
 def test_construct_fk_column_none():
     """
     GIVEN artifacts where foreign key column artifacts are None
