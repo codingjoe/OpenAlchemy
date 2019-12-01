@@ -88,3 +88,5 @@ class ObjectArtifacts:
     backref: typing.Optional[str] = None
     # Whether to use a list for the back reference
     uselist: typing.Optional[bool] = None
+    # The name of the secondary table to use for the relationship
+    secondary: typing.Optional[str] = None

@@ -710,6 +710,52 @@ def test_check_foreign_key_required_spec(model_schema, schemas, expected_require
     assert required == expected_required
 
 
+@pytest.mark.parametrize(
+    "artifacts",
+    [
+        types.ObjectArtifacts("RefSchema", backref=None, uselist=True),
+        types.ObjectArtifacts("RefSchema", secondary="association"),
+    ],
+    ids=["backref None uselist not None", "secondary not None"],
+)
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_check_object_artifacts_error(artifacts):
+    """
+    GIVEN artifacts
+    WHEN _check_object_artifacts is called with the artifacts
+    THEN MalformedRelationshipError is raised.
+    """
+    with pytest.raises(exceptions.MalformedRelationshipError):
+        object_ref._check_object_artifacts(artifacts=artifacts)
+
+
+@pytest.mark.parametrize(
+    "artifacts",
+    [
+        types.ObjectArtifacts("RefSchema"),
+        types.ObjectArtifacts("RefSchema", uselist=False),
+        types.ObjectArtifacts("RefSchema", backref="schema"),
+        types.ObjectArtifacts("RefSchema", backref="schema", uselist=True),
+    ],
+    ids=[
+        "model name only",
+        "backref None uselist False",
+        "backref not None",
+        "backref with uselist",
+    ],
+)
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_check_object_artifacts(artifacts):
+    """
+    GIVEN artifacts
+    WHEN _check_object_artifacts is called with the artifacts
+    THEN MalformedRelationshipError is not raised.
+    """
+    object_ref._check_object_artifacts(artifacts=artifacts)
+
+
 @pytest.mark.column
 @pytest.mark.object_ref
 def test_calculate_fk_logical_name_none():
