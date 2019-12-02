@@ -400,12 +400,6 @@ def _calculate_fk_logical_name(
         The logical name for the foreign key column.
 
     """
-    if artifacts.fk_column_name is None:
-        raise exceptions.MissingArgumentError(
-            "When determining the foreign key logical name, the foreign key column "
-            "artifacts cannot be None."
-        )
-
     return f"{logical_name}_{artifacts.fk_column_name}"
 
 
@@ -422,18 +416,7 @@ def _construct_fk_column(*, artifacts: types.ObjectArtifacts) -> sqlalchemy.Colu
         The foreign key column.
 
     """
-    if artifacts.fk_column_artifacts is None:
-        raise exceptions.MissingArgumentError(
-            "When constructing the foreign key column, the foreign key column "
-            "artifacts cannot be None."
-        )
-
     return column.construct_column(artifacts=artifacts.fk_column_artifacts)
-
-
-def _check_foreign_key_required(*, artifacts: types.ObjectArtifacts) -> bool:
-    """Check whether foreign key should be constructed based on artifacts."""
-    return artifacts.fk_column_artifacts is not None
 
 
 def _construct_relationship(

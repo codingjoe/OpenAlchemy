@@ -1,8 +1,6 @@
 """Tests for the column factory."""
 # pylint: disable=protected-access
 
-from unittest import mock
-
 import pytest
 import sqlalchemy
 
@@ -711,32 +709,36 @@ def test_check_foreign_key_required_spec(model_schema, schemas, expected_require
 
 
 @pytest.mark.parametrize(
-    "artifacts",
-    [
-        types.ObjectArtifacts("RefSchema", backref=None, uselist=True),
-        types.ObjectArtifacts("RefSchema", secondary="association"),
-    ],
+    "kwargs",
+    [{"backref": None, "uselist": True}, {"secondary": "association"}],
     ids=["backref None uselist not None", "secondary not None"],
 )
 @pytest.mark.column
 @pytest.mark.object_ref
-def test_check_object_artifacts_error(artifacts):
+def test_check_object_artifacts_error(kwargs):
     """
-    GIVEN artifacts
+    GIVEN kwargs for artifacts
     WHEN _check_object_artifacts is called with the artifacts
     THEN MalformedRelationshipError is raised.
     """
+    artifacts = types.ObjectArtifacts(
+        ref_model_name="RefSchema",
+        fk_column_name="fk_column",
+        fk_column_artifacts=types.ColumnArtifacts("integer"),
+        **kwargs,
+    )
+
     with pytest.raises(exceptions.MalformedRelationshipError):
         object_ref._check_object_artifacts(artifacts=artifacts)
 
 
 @pytest.mark.parametrize(
-    "artifacts",
+    "kwargs",
     [
-        types.ObjectArtifacts("RefSchema"),
-        types.ObjectArtifacts("RefSchema", uselist=False),
-        types.ObjectArtifacts("RefSchema", backref="schema"),
-        types.ObjectArtifacts("RefSchema", backref="schema", uselist=True),
+        {},
+        {"uselist": False},
+        {"backref": "schema"},
+        {"backref": "schema", "uselist": True},
     ],
     ids=[
         "model name only",
@@ -747,29 +749,20 @@ def test_check_object_artifacts_error(artifacts):
 )
 @pytest.mark.column
 @pytest.mark.object_ref
-def test_check_object_artifacts(artifacts):
+def test_check_object_artifacts(kwargs):
     """
-    GIVEN artifacts
+    GIVEN kwargs for artifacts
     WHEN _check_object_artifacts is called with the artifacts
     THEN MalformedRelationshipError is not raised.
     """
+    artifacts = types.ObjectArtifacts(
+        ref_model_name="RefSchema",
+        fk_column_name="fk_column",
+        fk_column_artifacts=types.ColumnArtifacts("integer"),
+        **kwargs,
+    )
+
     object_ref._check_object_artifacts(artifacts=artifacts)
-
-
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_calculate_fk_logical_name_none():
-    """
-    GIVEN artifacts where foreign key column name is None
-    WHEN _calculate_fk_logical_name is called with the artifacts
-    THEN MissingArgumentError is raised.
-    """
-    artifacts = types.ObjectArtifacts("RefSchema")
-
-    with pytest.raises(exceptions.MissingArgumentError):
-        object_ref._calculate_fk_logical_name(
-            artifacts=artifacts, logical_name="ref_schema"
-        )
 
 
 @pytest.mark.column
@@ -780,27 +773,17 @@ def test_calculate_fk_logical_name():
     WHEN _calculate_fk_logical_name is called with the artifacts
     THEN a foreign key column is returned.
     """
-    artifacts = types.ObjectArtifacts("RefSchema", fk_column_name="fk_column")
+    artifacts = types.ObjectArtifacts(
+        "RefSchema",
+        fk_column_name="fk_column",
+        fk_column_artifacts=types.ColumnArtifacts("integer"),
+    )
 
     name = object_ref._calculate_fk_logical_name(
         artifacts=artifacts, logical_name="ref_schema"
     )
 
     assert name == "ref_schema_fk_column"
-
-
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_construct_fk_column_none():
-    """
-    GIVEN artifacts where foreign key column artifacts are None
-    WHEN _construct_fk_column is called with the artifacts
-    THEN MissingArgumentError is raised.
-    """
-    artifacts = types.ObjectArtifacts("RefSchema")
-
-    with pytest.raises(exceptions.MissingArgumentError):
-        object_ref._construct_fk_column(artifacts=artifacts)
 
 
 @pytest.mark.column
@@ -813,7 +796,7 @@ def test_construct_fk_column():
     """
     fk_column_artifacts = types.ColumnArtifacts("integer", foreign_key="table.column")
     artifacts = types.ObjectArtifacts(
-        "RefSchema", fk_column_artifacts=fk_column_artifacts
+        "RefSchema", fk_column_name="fk_column", fk_column_artifacts=fk_column_artifacts
     )
 
     column = object_ref._construct_fk_column(artifacts=artifacts)
@@ -825,45 +808,13 @@ def test_construct_fk_column():
 
 
 @pytest.mark.parametrize(
-    "artifacts, expected_required",
+    "kwargs, expected_backref, expected_uselist",
     [
-        (types.ObjectArtifacts("RefSchema"), False),
-        (
-            types.ObjectArtifacts("RefSchema", fk_column_artifacts=mock.MagicMock()),
-            True,
-        ),
-    ],
-    ids=["none", "not none"],
-)
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_check_foreign_key_required(artifacts, expected_required):
-    """
-    GIVEN artifacts and expected required
-    WHEN _check_foreign_key_required is called with the artifacts
-    THEN the expected required is returned.
-    """
-    required = object_ref._check_foreign_key_required(artifacts=artifacts)
-
-    assert required == expected_required
-
-
-@pytest.mark.parametrize(
-    "artifacts, expected_backref, expected_uselist",
-    [
-        (types.ObjectArtifacts("RefSchema"), None, None),
-        (types.ObjectArtifacts("RefSchema", backref="schema"), "schema", None),
-        (types.ObjectArtifacts("RefSchema", uselist=True), None, None),
-        (
-            types.ObjectArtifacts("RefSchema", backref="schema", uselist=False),
-            "schema",
-            False,
-        ),
-        (
-            types.ObjectArtifacts("RefSchema", backref="schema", uselist=True),
-            "schema",
-            True,
-        ),
+        ({}, None, None),
+        ({"backref": "schema"}, "schema", None),
+        ({"uselist": True}, None, None),
+        ({"backref": "schema", "uselist": False}, "schema", False),
+        ({"backref": "schema", "uselist": True}, "schema", True),
     ],
     ids=[
         "plain",
@@ -875,13 +826,20 @@ def test_check_foreign_key_required(artifacts, expected_required):
 )
 @pytest.mark.column
 @pytest.mark.object_ref
-def test_construct_relationship(artifacts, expected_backref, expected_uselist):
+def test_construct_relationship(kwargs, expected_backref, expected_uselist):
     """
-    GIVEN artifacts and expected backref and uselist
+    GIVEN kwargs for artifacts and expected backref and uselist
     WHEN _construct_relationship is called with the artifacts
     THEN a relationship referring to the referenced model and with the expected backref
         and uselist is constructed.
     """
+    artifacts = types.ObjectArtifacts(
+        "RefSchema",
+        fk_column_name="fk_column",
+        fk_column_artifacts=types.ColumnArtifacts("integer"),
+        **kwargs,
+    )
+
     relationship = object_ref._construct_relationship(artifacts=artifacts)
 
     assert relationship.argument == "RefSchema"
@@ -901,7 +859,11 @@ def test_calculate_schema():
     WHEN _calculate_schema is called with the artifacts
     THEN the schema for the object reference is returned.
     """
-    artifacts = types.ObjectArtifacts(ref_model_name="RefSchema")
+    artifacts = types.ObjectArtifacts(
+        ref_model_name="RefSchema",
+        fk_column_name="fk_column",
+        fk_column_artifacts=types.ColumnArtifacts("integer"),
+    )
 
     schema = object_ref._calculate_schema(artifacts=artifacts)
 
