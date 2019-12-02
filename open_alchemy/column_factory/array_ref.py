@@ -47,7 +47,7 @@ def handle_array(
         raise exceptions.MalformedRelationshipError(
             "An array property must include items property."
         )
-    obj_artifacts = object_ref.gather_object_artifacts(
+    obj_artifacts = object_ref.gather_object_artifacts_old(
         spec=item_spec, logical_name=logical_name, schemas=schemas
     )
 

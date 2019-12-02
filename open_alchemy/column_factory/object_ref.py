@@ -43,7 +43,7 @@ def handle_object(
 
     """
     # Retrieve artifacts required for object
-    obj_artifacts = gather_object_artifacts(
+    obj_artifacts = gather_object_artifacts_old(
         spec=spec, logical_name=logical_name, schemas=schemas
     )
 
@@ -99,7 +99,7 @@ class ObjectArtifacts:
     secondary: typing.Optional[str]
 
 
-def gather_object_artifacts(
+def gather_object_artifacts_old(
     *, spec: types.Schema, logical_name: str, schemas: types.Schemas
 ) -> ObjectArtifacts:
     """
