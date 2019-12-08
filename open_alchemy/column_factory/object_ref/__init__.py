@@ -1,4 +1,5 @@
 """Functions relating to object references."""
+# pylint: disable=useless-import-alias
 
 import dataclasses
 import typing
@@ -10,7 +11,13 @@ from open_alchemy import exceptions
 from open_alchemy import helpers
 from open_alchemy import types
 
-from . import column
+from .. import column
+from .calc_fk_logical_name import calc_fk_logical_name as _calc_fk_logical_name
+from .calculate_schema import calculate_schema as _calculate_schema
+from .check_fk_required import check_fk_required as check_fk_required
+from .check_object_artifacts import check_object_artifacts as _check_object_artifacts
+from .construct_fk_column import construct_fk_column as _construct_fk_column
+from .construct_relationship import construct_relationship as _construct_relationship
 
 
 def handle_object(
@@ -361,166 +368,3 @@ def check_foreign_key_required_spec(
         )
 
     return False
-
-
-def check_foreign_key_required(
-    *,
-    artifacts: types.ObjectArtifacts,
-    fk_logical_name: str,
-    model_schema: types.Schema,
-    schemas: types.Schemas,
-) -> bool:
-    """
-    Check whether a foreign key has already been defined.
-
-    Assume model_schema has already resolved any $ref and allOf at the object level.
-    They may not have been resolved at the property level.
-
-    Check whether the proposed logical name is already defined on the model schema. If
-    it has been, check that the type is correct and that the foreign key reference has
-    been defined and points to the correct column.
-
-    Raise MalformedRelationshipError if a property has already been defined with the
-    same name as is proposed for the foreign key but it has the wrong type or does not
-    define the correct foreign key constraint.
-
-    Args:
-        artifacts: The artifacts for constructing the object reference.
-        fk_logical_name: The proposed name for the foreign key property.
-        model_schema: The schema for the model on which the foreign key is proposed to
-            be added.
-        schemas: Used to resolve any $ref at the property level.
-
-    Returns:
-        Whether defining the foreign key is necessary given the model schema.
-
-    """
-    properties = model_schema["properties"]
-    model_fk_spec = properties.get(fk_logical_name)
-    if model_fk_spec is None:
-        return True
-    model_fk_spec = helpers.prepare_schema(schema=model_fk_spec, schemas=schemas)
-
-    # Check type
-    try:
-        model_fk_type = helpers.peek.type_(schema=model_fk_spec, schemas=schemas)
-    except exceptions.TypeMissingError:
-        raise exceptions.MalformedRelationshipError(
-            f"{fk_logical_name} does not have a type. "
-        )
-    fk_type = artifacts.fk_column_artifacts.type
-    if model_fk_type != fk_type:
-        raise exceptions.MalformedRelationshipError(
-            "The foreign key required for the relationship has a different type than "
-            "the property already defined under that name. "
-            f"The required type is {fk_type}. "
-            f"The {fk_logical_name} property has the {model_fk_type} type."
-        )
-
-    # Check foreign key constraint
-    model_foreign_key = helpers.get_ext_prop(source=model_fk_spec, name="x-foreign-key")
-    foreign_key = artifacts.fk_column_artifacts.foreign_key
-    if model_foreign_key is None:
-        raise exceptions.MalformedRelationshipError(
-            f"The property already defined under {fk_logical_name} does not define a "
-            'foreign key constraint. Use the "x-foreign-key" extension property to '
-            f'define a foreign key constraint, for example: "{foreign_key}".'
-        )
-    if model_foreign_key != foreign_key:
-        raise exceptions.MalformedRelationshipError(
-            "The foreign key required for the relationship has a different foreign "
-            "key constraint than the property already defined under that name. "
-            f"The required constraint is {foreign_key}. "
-            f"The {fk_logical_name} property has the {model_foreign_key} constraint."
-        )
-
-    return False
-
-
-def _check_object_artifacts(*, artifacts: types.ObjectArtifacts) -> None:
-    """
-    Check whether object artifacts are valid for object references.
-
-    Raises MalformedRelationshipError if uselist is not None and backref is None.
-    Raises MalformedRelationshipError if secondary is not None.
-
-    Args:
-        artifacts: The artifacts to check.
-
-    """
-    if artifacts.backref is None and artifacts.uselist is True:
-        raise exceptions.MalformedRelationshipError(
-            "Uselist is only valid for an object reference with a back reference."
-        )
-    if artifacts.secondary is not None:
-        raise exceptions.MalformedRelationshipError(
-            "A secondary table is only valid for a many to many relationship."
-        )
-
-
-def _calculate_fk_logical_name(
-    *, artifacts: types.ObjectArtifacts, logical_name: str
-) -> str:
-    """
-    Calculate the foreign key column logical name.
-
-    Raises MissingArgumentError if the foreign key column artifacts are None.
-
-    Args:
-        artifacts: The artifacts for the object reference.
-        logical_name: The logical name of the relationship.
-
-    Returns:
-        The logical name for the foreign key column.
-
-    """
-    return f"{logical_name}_{artifacts.fk_column_name}"
-
-
-def _construct_fk_column(*, artifacts: types.ObjectArtifacts) -> sqlalchemy.Column:
-    """
-    Construct the foreign key column for the relationship.
-
-    Raises MissingArgumentError if the foreign key column artifacts are None.
-
-    Args:
-        artifacts: Used to construct the foreign key column.
-
-    Returns:
-        The foreign key column.
-
-    """
-    return column.construct_column(artifacts=artifacts.fk_column_artifacts)
-
-
-def _construct_relationship(
-    *, artifacts: types.ObjectArtifacts
-) -> orm.RelationshipProperty:
-    """
-    Construct the relationship for the object reference.
-
-    Args:
-        artifacts: The artifacts for the object reference.
-
-    Returns:
-        The relationship for the object reference.
-
-    """
-    backref = None
-    if artifacts.backref is not None:
-        backref = orm.backref(artifacts.backref, uselist=artifacts.uselist)
-    return orm.relationship(artifacts.ref_model_name, backref=backref)
-
-
-def _calculate_schema(*, artifacts: types.ObjectArtifacts) -> types.ObjectSchema:
-    """
-    Calculate the object schema from the artifacts.
-
-    Args:
-        artifacts: The artifactsfor the object reference.
-
-    Returns:
-        The schema for the object to store with the model.
-
-    """
-    return {"type": "object", "x-de-$ref": artifacts.ref_model_name}
