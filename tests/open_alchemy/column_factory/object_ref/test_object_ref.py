@@ -2,10 +2,8 @@
 # pylint: disable=protected-access
 
 import pytest
-import sqlalchemy
 
 from open_alchemy import exceptions
-from open_alchemy import types
 from open_alchemy.column_factory import object_ref
 
 
@@ -42,11 +40,6 @@ def test_handle_object_error(spec, schemas):
             logical_name="name 1",
             model_schema={},
         )
-
-
-# @pytest.mark.parametrize(
-#     "schema"
-# )
 
 
 @pytest.mark.parametrize(
@@ -713,125 +706,3 @@ def test_check_foreign_key_required_spec(model_schema, schemas, expected_require
     )
 
     assert required == expected_required
-
-
-@pytest.mark.parametrize(
-    "kwargs",
-    [{"backref": None, "uselist": True}, {"secondary": "association"}],
-    ids=["backref None uselist not None", "secondary not None"],
-)
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_check_object_artifacts_error(kwargs):
-    """
-    GIVEN kwargs for artifacts
-    WHEN _check_object_artifacts is called with the artifacts
-    THEN MalformedRelationshipError is raised.
-    """
-    artifacts = types.ObjectArtifacts(
-        ref_model_name="RefSchema",
-        fk_column_name="fk_column",
-        fk_column_artifacts=types.ColumnArtifacts("integer"),
-        **kwargs,
-    )
-
-    with pytest.raises(exceptions.MalformedRelationshipError):
-        object_ref._check_object_artifacts(artifacts=artifacts)
-
-
-@pytest.mark.parametrize(
-    "kwargs",
-    [
-        {},
-        {"uselist": False},
-        {"backref": "schema"},
-        {"backref": "schema", "uselist": True},
-    ],
-    ids=[
-        "model name only",
-        "backref None uselist False",
-        "backref not None",
-        "backref with uselist",
-    ],
-)
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_check_object_artifacts(kwargs):
-    """
-    GIVEN kwargs for artifacts
-    WHEN _check_object_artifacts is called with the artifacts
-    THEN MalformedRelationshipError is not raised.
-    """
-    artifacts = types.ObjectArtifacts(
-        ref_model_name="RefSchema",
-        fk_column_name="fk_column",
-        fk_column_artifacts=types.ColumnArtifacts("integer"),
-        **kwargs,
-    )
-
-    object_ref._check_object_artifacts(artifacts=artifacts)
-
-
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_construct_fk_column():
-    """
-    GIVEN artifacts with foreign key column artifacts
-    WHEN _construct_fk_column is called with the artifacts
-    THEN a foreign key column is returned.
-    """
-    fk_column_artifacts = types.ColumnArtifacts("integer", foreign_key="table.column")
-    artifacts = types.ObjectArtifacts(
-        "RefSchema", fk_column_name="fk_column", fk_column_artifacts=fk_column_artifacts
-    )
-
-    column = object_ref._construct_fk_column(artifacts=artifacts)
-
-    assert isinstance(column.type, sqlalchemy.Integer)
-    assert len(column.foreign_keys) == 1
-    foreign_key = column.foreign_keys.pop()
-    assert str(foreign_key) == "ForeignKey('table.column')"
-
-
-@pytest.mark.parametrize(
-    "kwargs, expected_backref, expected_uselist",
-    [
-        ({}, None, None),
-        ({"backref": "schema"}, "schema", None),
-        ({"uselist": True}, None, None),
-        ({"backref": "schema", "uselist": False}, "schema", False),
-        ({"backref": "schema", "uselist": True}, "schema", True),
-    ],
-    ids=[
-        "plain",
-        "backref",
-        "uselist",
-        "backref and uselist false",
-        "backref and uselist true",
-    ],
-)
-@pytest.mark.column
-@pytest.mark.object_ref
-def test_construct_relationship(kwargs, expected_backref, expected_uselist):
-    """
-    GIVEN kwargs for artifacts and expected backref and uselist
-    WHEN _construct_relationship is called with the artifacts
-    THEN a relationship referring to the referenced model and with the expected backref
-        and uselist is constructed.
-    """
-    artifacts = types.ObjectArtifacts(
-        "RefSchema",
-        fk_column_name="fk_column",
-        fk_column_artifacts=types.ColumnArtifacts("integer"),
-        **kwargs,
-    )
-
-    relationship = object_ref._construct_relationship(artifacts=artifacts)
-
-    assert relationship.argument == "RefSchema"
-    if expected_backref is None:
-        assert relationship.backref is None
-    else:
-        backref, kwargs = relationship.backref
-        assert backref == expected_backref
-        assert kwargs["uselist"] == expected_uselist
