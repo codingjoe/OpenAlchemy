@@ -1,12 +1,19 @@
 """Calculate the foreign key column artifacts."""
 
+import typing
+
 from open_alchemy import exceptions
 from open_alchemy import helpers
 from open_alchemy import types
+from open_alchemy.column_factory import column
 
 
 def calc_fk_artifacts(
-    *, model_schema: types.Schema, schemas: types.Schemas, fk_column_name: str
+    *,
+    model_schema: types.Schema,
+    schemas: types.Schemas,
+    fk_column_name: str,
+    required: typing.Optional[bool],
 ) -> types.ColumnArtifacts:
     """
     Calculate the foreign key column artifacts.
@@ -15,6 +22,7 @@ def calc_fk_artifacts(
         model_schema: The schema of the model.
         schemas: Used to resolve any $ref.
         fk_column_name: The name of the foreign key column.
+        required: Whether the foreign key is required.
 
     Returns:
         The artifacts for the foreign key column.
@@ -43,4 +51,9 @@ def calc_fk_artifacts(
             f"Referenced object {fk_column_name} property does not have a type."
         )
 
-    return types.ColumnArtifacts(fk_type, foreign_key=f"{tablename}.{fk_column_name}")
+    nullable = helpers.peek.nullable(schema=prepared_fk_schema, schemas=schemas)
+    nullable = column.calculate_nullable(nullable=nullable, required=required)
+
+    return types.ColumnArtifacts(
+        fk_type, foreign_key=f"{tablename}.{fk_column_name}", nullable=nullable
+    )

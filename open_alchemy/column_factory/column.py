@@ -81,7 +81,7 @@ def check_schema(
         return_schema["x-dict-ignore"] = dict_ignore
 
     # Construct return artifacts
-    nullable_artefact = _calculate_nullable(nullable=nullable, required=required)
+    nullable_artefact = calculate_nullable(nullable=nullable, required=required)
     return_artifacts = types.ColumnArtifacts(
         type_,
         format=format_,
@@ -97,7 +97,7 @@ def check_schema(
     return return_schema, return_artifacts
 
 
-def _calculate_nullable(
+def calculate_nullable(
     *, nullable: typing.Optional[bool], required: typing.Optional[bool]
 ) -> bool:
     """

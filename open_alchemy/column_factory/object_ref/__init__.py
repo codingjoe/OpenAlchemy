@@ -30,8 +30,10 @@ def handle_object(
     logical_name: str,
     model_schema: types.Schema,
 ) -> typing.Tuple[
-    typing.List[typing.Tuple[str, typing.Union[sqlalchemy.Column, typing.Type]]],
-    types.Schema,
+    typing.List[
+        typing.Tuple[str, typing.Union[sqlalchemy.Column, orm.RelationshipProperty]]
+    ],
+    typing.Any,
 ]:
     """
     Generate properties for a reference to another object.
@@ -52,48 +54,36 @@ def handle_object(
 
     """
     # Retrieve artifacts required for object
-    obj_artifacts = gather_object_artifacts_old(
-        spec=spec, logical_name=logical_name, schemas=schemas
+    artifacts = gather_object_artifacts.gather_object_artifacts(
+        schema=spec, logical_name=logical_name, schemas=schemas, required=required
     )
 
-    # Check for secondary
-    if obj_artifacts.secondary is not None:
-        raise exceptions.MalformedRelationshipError(
-            "Many to one and one to one relationships do not support x-secondary."
-        )
+    # Check artifacts
+    _check_object_artifacts(artifacts=artifacts)
 
     # Construct foreign key
-    foreign_key_spec = handle_object_reference(
-        spec=obj_artifacts.spec, schemas=schemas, fk_column=obj_artifacts.fk_column
+    fk_logical_name = _calc_fk_logical_name(
+        artifacts=artifacts, logical_name=logical_name
     )
-    fk_logical_name = f"{logical_name}_{obj_artifacts.fk_column}"
-    fk_required = check_foreign_key_required_spec(
-        fk_spec=foreign_key_spec,
+    fk_required = check_fk_required(
+        artifacts=artifacts,
         fk_logical_name=fk_logical_name,
         model_schema=model_schema,
         schemas=schemas,
     )
     if fk_required:
-        _, fk_column = column.handle_column(schema=foreign_key_spec, required=required)
+        fk_column = _construct_fk_column(artifacts=artifacts)
         return_value = [(fk_logical_name, fk_column)]
     else:
         return_value = []
 
     # Creating relationship
-    backref = None
-    if obj_artifacts.backref is not None:
-        backref = sqlalchemy.orm.backref(
-            obj_artifacts.backref, uselist=obj_artifacts.uselist
-        )
-    return_value.append(
-        (
-            logical_name,
-            sqlalchemy.orm.relationship(
-                obj_artifacts.ref_logical_name, backref=backref
-            ),
-        )
-    )
-    return return_value, {"type": "object", "x-de-$ref": obj_artifacts.ref_logical_name}
+    relationship = _construct_relationship(artifacts=artifacts)
+    return_value.append((logical_name, relationship))
+
+    # Calculate schema
+    return_schema = _calculate_schema(artifacts=artifacts)
+    return return_value, return_schema
 
 
 @dataclasses.dataclass

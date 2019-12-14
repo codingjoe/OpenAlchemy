@@ -11,7 +11,11 @@ from .calc_fk_artifacts import calc_fk_artifacts
 
 
 def gather_object_artifacts(
-    *, schema: types.Schema, logical_name: str, schemas: types.Schemas
+    *,
+    schema: types.Schema,
+    logical_name: str,
+    schemas: types.Schemas,
+    required: typing.Optional[bool],
 ) -> types.ObjectArtifacts:
     """
     Gather artifacts for constructing an object reference.
@@ -26,6 +30,7 @@ def gather_object_artifacts(
         schema: The schema of the object reference.
         logical_name: The property name of the object reference.
         schemas: Used to resolve any $ref.
+        required: Whether the relationship is a required property.
 
     Returns:
         The object artifacts required for construction.
@@ -39,6 +44,7 @@ def gather_object_artifacts(
         model_schema=intermediary_obj_artifacts.ref_schema,
         schemas=schemas,
         fk_column_name=intermediary_obj_artifacts.fk_column_name,
+        required=required,
     )
 
     return types.ObjectArtifacts(

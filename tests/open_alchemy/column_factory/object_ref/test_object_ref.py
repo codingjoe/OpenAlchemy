@@ -136,39 +136,39 @@ def test_handle_object_error(spec, schemas):
 #     assert return_value == {"type": "fkType", "x-foreign-key": "table 1.fk"}
 
 
-@pytest.mark.parametrize(
-    "spec, schemas, expected_spec",
-    [
-        (
-            {"$ref": "#/components/schemas/RefSchema"},
-            {"RefSchema": {"type": "object"}},
-            {"type": "object"},
-        ),
-        (
-            {"$ref": "#/components/schemas/RefSchema"},
-            {"RefSchema": {"allOf": [{"type": "object"}]}},
-            {"type": "object"},
-        ),
-        (
-            {"allOf": [{"$ref": "#/components/schemas/RefSchema"}]},
-            {"RefSchema": {"type": "object"}},
-            {"type": "object"},
-        ),
-    ],
-    ids=["$ref", "$ref to allOf", "allOf"],
-)
-@pytest.mark.column
-def test_gather_object_artifacts_old_spec(spec, schemas, expected_spec):
-    """
-    GIVEN specification, schemas and expected specification
-    WHEN gather_object_artifacts_old is called with the specification and schemas
-    THEN the expected specification is returned.
-    """
-    obj_artifacts = object_ref.gather_object_artifacts_old(
-        spec=spec, logical_name="", schemas=schemas
-    )
+# @pytest.mark.parametrize(
+#     "spec, schemas, expected_spec",
+#     [
+#         (
+#             {"$ref": "#/components/schemas/RefSchema"},
+#             {"RefSchema": {"type": "object"}},
+#             {"type": "object"},
+#         ),
+#         (
+#             {"$ref": "#/components/schemas/RefSchema"},
+#             {"RefSchema": {"allOf": [{"type": "object"}]}},
+#             {"type": "object"},
+#         ),
+#         (
+#             {"allOf": [{"$ref": "#/components/schemas/RefSchema"}]},
+#             {"RefSchema": {"type": "object"}},
+#             {"type": "object"},
+#         ),
+#     ],
+#     ids=["$ref", "$ref to allOf", "allOf"],
+# )
+# @pytest.mark.column
+# def test_gather_object_artifacts_old_spec(spec, schemas, expected_spec):
+#     """
+#     GIVEN specification, schemas and expected specification
+#     WHEN gather_object_artifacts_old is called with the specification and schemas
+#     THEN the expected specification is returned.
+#     """
+#     obj_artifacts = object_ref.gather_object_artifacts_old(
+#         spec=spec, logical_name="", schemas=schemas
+#     )
 
-    assert obj_artifacts.spec == expected_spec
+#     assert obj_artifacts.spec == expected_spec
 
 
 # @pytest.mark.parametrize(
@@ -299,20 +299,20 @@ def test_gather_object_artifacts_old_spec(spec, schemas, expected_spec):
 #     assert obj_artifacts.backref == expected_backref
 
 
-@pytest.mark.column
-def test_gather_object_artifacts_old_uselist_no_backref():
-    """
-    GIVEN specification with uselist but not backref and schemas
-    WHEN gather_object_artifacts_old is called with the specification and schemas
-    THEN MalformedRelationshipError is raised.
-    """
-    spec = {"$ref": "#/components/schemas/RefSchema"}
-    schemas = {"RefSchema": {"type": "object", "x-uselist": False}}
+# @pytest.mark.column
+# def test_gather_object_artifacts_old_uselist_no_backref():
+#     """
+#     GIVEN specification with uselist but not backref and schemas
+#     WHEN gather_object_artifacts_old is called with the specification and schemas
+#     THEN MalformedRelationshipError is raised.
+#     """
+#     spec = {"$ref": "#/components/schemas/RefSchema"}
+#     schemas = {"RefSchema": {"type": "object", "x-uselist": False}}
 
-    with pytest.raises(exceptions.MalformedRelationshipError):
-        object_ref.gather_object_artifacts_old(
-            spec=spec, logical_name="", schemas=schemas
-        )
+#     with pytest.raises(exceptions.MalformedRelationshipError):
+#         object_ref.gather_object_artifacts_old(
+#             spec=spec, logical_name="", schemas=schemas
+#         )
 
 
 # @pytest.mark.parametrize(

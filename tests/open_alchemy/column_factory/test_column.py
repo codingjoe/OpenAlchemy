@@ -37,13 +37,13 @@ from open_alchemy.column_factory import column
     ],
 )
 @pytest.mark.column
-def test_calculate_nullable(required, nullable, expected_result):
+def testcalculate_nullable(required, nullable, expected_result):
     """
     GIVEN required, nullable and expected result
-    WHEN _calculate_nullable is called with nullable and required
+    WHEN calculate_nullable is called with nullable and required
     THEN the expected result is returned.
     """
-    result = column._calculate_nullable(nullable=nullable, required=required)
+    result = column.calculate_nullable(nullable=nullable, required=required)
 
     assert result == expected_result
 

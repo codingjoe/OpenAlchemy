@@ -140,7 +140,7 @@ def test_fk_artifacts(schema, schemas):
     THEN the expected foreign key artifacts.
     """
     obj_artifacts = object_ref.gather_object_artifacts.gather_object_artifacts(
-        schema=schema, logical_name="", schemas=schemas
+        schema=schema, logical_name="", schemas=schemas, required=False
     )
 
     assert obj_artifacts.fk_column_artifacts.type == "fkType"
