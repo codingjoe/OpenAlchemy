@@ -98,9 +98,13 @@ def _handle_schema(
         intermediary_obj_artifacts = _handle_ref(
             logical_name=logical_name, schema=schema, schemas=schemas
         )
-    if all_of is not None:
+    elif all_of is not None:
         intermediary_obj_artifacts = _handle_all_of(
             logical_name=logical_name, all_of_schema=all_of, schemas=schemas
+        )
+    else:
+        raise exceptions.MalformedRelationshipError(
+            "Relationships are defined using either $ref or allOf."
         )
 
     return intermediary_obj_artifacts
