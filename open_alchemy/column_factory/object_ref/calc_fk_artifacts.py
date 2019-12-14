@@ -30,24 +30,24 @@ def calc_fk_artifacts(
     """
     tablename = helpers.get_ext_prop(source=model_schema, name="x-tablename")
     if not tablename:
-        raise exceptions.MalformedSchemaError(
+        raise exceptions.MalformedRelationshipError(
             "Referenced object is missing x-tablename property."
         )
     properties = model_schema.get("properties")
     if properties is None:
-        raise exceptions.MalformedSchemaError(
+        raise exceptions.MalformedRelationshipError(
             "Referenced object does not have any properties."
         )
     fk_schema = properties.get(fk_column_name)
     if fk_schema is None:
-        raise exceptions.MalformedSchemaError(
+        raise exceptions.MalformedRelationshipError(
             f"Referenced object does not have {fk_column_name} property."
         )
     # Preparing schema
     prepared_fk_schema = helpers.prepare_schema(schema=fk_schema, schemas=schemas)
     fk_type = prepared_fk_schema.get("type")
     if fk_type is None:
-        raise exceptions.MalformedSchemaError(
+        raise exceptions.MalformedRelationshipError(
             f"Referenced object {fk_column_name} property does not have a type."
         )
 

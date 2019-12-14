@@ -36,9 +36,9 @@ def test_malformed_schema(schema, schemas, fk_column):
     GIVEN schema, schemas and foreign key column
     WHEN _calc_fk_artifacts is called with the schema, schemas and foreign key
         column
-    THEN a MalformedSchemaError is raised.
+    THEN a MalformedRelationshipError is raised.
     """
-    with pytest.raises(exceptions.MalformedSchemaError):
+    with pytest.raises(exceptions.MalformedRelationshipError):
         object_ref._calc_fk_artifacts(
             model_schema=schema,
             schemas=schemas,

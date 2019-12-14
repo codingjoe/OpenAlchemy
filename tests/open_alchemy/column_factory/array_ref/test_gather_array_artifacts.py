@@ -33,32 +33,21 @@ from open_alchemy.column_factory import array_ref
                 }
             },
         ),
-        # (
-        #     {
-        #         "type": "array",
-        #         "items": {"allOf": [{"$ref": "#/components/schemas/RefSchema"}]},
-        #     },
-        #     {"RefSchema": {}},
-        # ),
-        # (
-        #     {"type": "array", "items": {"$ref": "#/components/schemas/RefSchema"}},
-        #     {"RefSchema": {"type": "integer"}},
-        # ),
-        # (
-        #     {"type": "array", "items": {"$ref": "#/components/schemas/RefSchema"}},
-        #     {"RefSchema": {"type": "object"}},
-        # ),
-        # (
-        #     {"type": "array", "items": {"$ref": "#/components/schemas/RefSchema"}},
-        #     {
-        #         "RefSchema": {
-        #             "type": "object",
-        #             "x-tablename": "ref_schema",
-        #             "x-backref": "schema",
-        #             "x-uselist": False,
-        #         }
-        #     },
-        # ),
+        (
+            {
+                "type": "array",
+                "items": {"allOf": [{"$ref": "#/components/schemas/RefSchema"}]},
+            },
+            {"RefSchema": {}},
+        ),
+        (
+            {"type": "array", "items": {"$ref": "#/components/schemas/RefSchema"}},
+            {"RefSchema": {"type": "integer"}},
+        ),
+        (
+            {"type": "array", "items": {"$ref": "#/components/schemas/RefSchema"}},
+            {"RefSchema": {"type": "object"}},
+        ),
     ],
     ids=[
         "no items",
@@ -66,10 +55,9 @@ from open_alchemy.column_factory import array_ref
         "items allOf without $ref",
         "items allOf multiple $ref",
         "$ref items no type",
-        # "allOf items no type",
-        # "items type not object",
-        # "items no x-tablename",
-        # "backref and uselist defined",
+        "allOf items no type",
+        "items type not object",
+        "items no x-tablename",
     ],
 )
 @pytest.mark.column
