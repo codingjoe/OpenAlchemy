@@ -8,6 +8,41 @@ from open_alchemy.column_factory import object_ref
 
 
 @pytest.mark.parametrize(
+    "schemas",
+    [
+        {
+            "RefSchema": {
+                "x-tablename": "ref_schema",
+                "properties": {"id": {"type": "integer"}},
+            }
+        },
+        {
+            "RefSchema": {
+                "type": "notObject",
+                "x-tablename": "ref_schema",
+                "properties": {"id": {"type": "integer"}},
+            }
+        },
+    ],
+    ids=["no type", "not object type"],
+)
+@pytest.mark.column
+@pytest.mark.object_ref
+def test_ref_error(schemas):
+    """
+    GIVEN referenced schema that is not valid and schema
+    WHEN _handle_schema is called with the schema and schemas
+    THEN MalformedRelationshipError is raised.
+    """
+    schema = {"$ref": "#/components/schemas/RefSchema"}
+
+    with pytest.raises(exceptions.MalformedRelationshipError):
+        object_ref.gather_object_artifacts._handle_schema(
+            logical_name="", schema=schema, schemas=schemas
+        )
+
+
+@pytest.mark.parametrize(
     "schema",
     [
         [{"type": "object"}],
@@ -50,11 +85,11 @@ from open_alchemy.column_factory import object_ref
 def test_all_of_error(schema):
     """
     GIVEN schema
-    WHEN gather_object_artifacts is called with the spec
+    WHEN _handle_schema is called with the schema
     THEN MalformedRelationshipError is raised.
     """
     schema = {"allOf": schema}
-    schemas = {"Schema1": {}, "Schema2": {}}
+    schemas = {"Schema1": {"type": "object"}, "Schema2": {"type": "object"}}
 
     with pytest.raises(exceptions.MalformedRelationshipError):
         object_ref.gather_object_artifacts._handle_schema(

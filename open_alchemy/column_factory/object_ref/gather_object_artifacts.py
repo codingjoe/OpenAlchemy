@@ -130,6 +130,18 @@ def _handle_ref(
     )
     ref_schema = helpers.merge_all_of(schema=ref_schema, schemas=schemas)
 
+    # Check referenced schema
+    try:
+        type_ = helpers.peek.type_(schema=ref_schema, schemas=schemas)
+    except exceptions.TypeMissingError:
+        raise exceptions.MalformedRelationshipError(
+            "The referenced schema does not have a type."
+        )
+    if type_ != "object":
+        raise exceptions.MalformedRelationshipError(
+            "A reference in a relationship must resolve to an object."
+        )
+
     # Read other parameters
     backref = helpers.get_ext_prop(source=ref_schema, name="x-backref")
     uselist = helpers.get_ext_prop(source=ref_schema, name="x-uselist")
