@@ -12,6 +12,8 @@ from open_alchemy import helpers
 from open_alchemy import types
 
 from .. import column
+from . import gather_object_artifacts as gather_object_artifacts
+from .calc_fk_artifacts import calc_fk_artifacts as _calc_fk_artifacts
 from .calc_fk_logical_name import calc_fk_logical_name as _calc_fk_logical_name
 from .calculate_schema import calculate_schema as _calculate_schema
 from .check_fk_required import check_fk_required as check_fk_required

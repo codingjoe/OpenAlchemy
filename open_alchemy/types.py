@@ -78,7 +78,7 @@ ObjectSchema = TypedDict(  # pylint: disable=invalid-name
 class ObjectArtifacts:
     """Information required to construct an object reference."""
 
-    # The name of the model referenced
+    # The name of the referenced model
     ref_model_name: str
     # The name of the foreign key column
     fk_column_name: str
