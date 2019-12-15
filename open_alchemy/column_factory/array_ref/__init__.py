@@ -13,6 +13,7 @@ from open_alchemy import types
 from ...utility_base import TOptUtilityBase
 from .. import column
 from .. import object_ref
+from .check_array_artifacts import check_array_artifacts as _check_array_artifacts
 from .gather_array_artifacts import gather_array_artifacts
 
 
