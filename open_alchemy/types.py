@@ -90,3 +90,8 @@ class ObjectArtifacts:
     uselist: typing.Optional[bool] = None
     # The name of the secondary table to use for the relationship
     secondary: typing.Optional[str] = None
+
+
+ArraySchema = TypedDict(  # pylint: disable=invalid-name
+    "ArraySchema", {"type": str, "items": ObjectSchema}
+)
