@@ -17,6 +17,7 @@ from .calculate_schema import calculate_schema as _calculate_schema
 from .check_array_artifacts import check_array_artifacts as _check_array_artifacts
 from .construct_relationship import construct_relationship as _construct_relationship
 from .gather_array_artifacts import gather_array_artifacts
+from .set_foreign_key import set_foreign_key as _set_foreign_key
 
 
 def handle_array(
@@ -91,7 +92,7 @@ def handle_array(
     }
     # Add foreign key to referenced schema
     if obj_artifacts.secondary is None:
-        _set_foreign_key(
+        _set_foreign_key_old(
             ref_model_name=obj_artifacts.ref_logical_name,
             model_schema=model_schema,
             schemas=schemas,
@@ -109,7 +110,7 @@ def handle_array(
     return [relationship_return], spec_return
 
 
-def _set_foreign_key(
+def _set_foreign_key_old(
     *,
     ref_model_name: str,
     model_schema: types.Schema,
